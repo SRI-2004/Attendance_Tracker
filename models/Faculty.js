@@ -3,6 +3,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database'); // Adjust the import path as necessary
 const Course = require('./Course');
 const Student = require('./Student');
+const AttendanceRecord = require('./AttendanceRecord');
 const Faculty = sequelize.define('Faculty', {
   id: {
     type: DataTypes.INTEGER,

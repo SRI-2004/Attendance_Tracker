@@ -12,15 +12,14 @@ const Course = sequelize.define('Course', {
   name: {
     type: DataTypes.STRING,
     allowNull: false
-  }
+  },
 });
 
 (async () => {
     try {
         await Course.sync();
-        Course.belongsTo(Faculty, { foreignKey: 'facultyId' });
         Course.hasMany(Class, { foreignKey: 'courseId' });
-        
+        Course.belongsTo(Faculty, { foreignKey: 'facultyId' });
   
         console.log("Course model is synced with the database");
     } catch (error) {

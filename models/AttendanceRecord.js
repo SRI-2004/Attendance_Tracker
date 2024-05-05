@@ -15,26 +15,28 @@ const AttendanceRecord = sequelize.define('AttendanceRecord', {
     },
     classes_attended: { 
         type: DataTypes.INTEGER, 
-        allowNull: true 
+        allowNull: false,
+        defaultValue: 0 
     },
     total_classes: { 
         type: DataTypes.INTEGER, 
-        allowNull: true 
+        allowNull: false,
+        defaultValue: 0 
     },
     od_ml: { 
         type: DataTypes.INTEGER, 
-        allowNull: true
-    }
+        allowNull: false,
+        defaultValue: 0
+    },
 });
 
 (async () => {
     try {
         await AttendanceRecord.sync();
+        AttendanceRecord.belongsTo(Student, { foreignKey: 'studentId' });
+        // AttendanceRecord.belongsTo(Class, { foreignKey: 'classId', as: 'Class' });
         AttendanceRecord.belongsTo(Faculty, { foreignKey: 'facultyId' });
         AttendanceRecord.belongsTo(Course, { foreignKey: 'courseId' });
-        AttendanceRecord.belongsTo(Student, { foreignKey: 'studentId' });
-        AttendanceRecord.belongsTo(Class, { foreignKey: 'classId' });
-        
   
         console.log("Attendance_Record model is synced with the database");
     } catch (error) {

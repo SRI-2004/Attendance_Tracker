@@ -53,14 +53,15 @@ const Student = sequelize.define('Student', {
 // Wait for synchronization to finish before defining relationships
 (async () => {
   try {
-    await Student.sync();
-    console.log('Student model synchronized with the database.');
+    
     
     // Define Relationships
     Student.belongsToMany(Course, { through: StudentCourses }); // Many-to-Many with Course through junction table
-    Student.belongsTo(Faculty, { foreignKey: 'advisorId' }); // Many-to-One with Faculty
+    Student.belongsTo(Faculty, { foreignKey: 'facultyId' }); // Many-to-One with Faculty
     Student.belongsToMany(Class, { through: StudentClasses }); // Many-to-Many with Class through junction table
     Student.hasOne(ImageData); // One-to-One with ImageData
+    await Student.sync();
+    console.log('Student model synchronized with the database.');
   } catch (error) {
     console.error('Error syncing the Student model:', error);
   }

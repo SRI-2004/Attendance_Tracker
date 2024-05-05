@@ -1,5 +1,3 @@
-
-// Import necessary modules
 const express = require('express');
 const { Faculty, Course, Class, AttendanceRecord, Student } = require('../models/index'); // Import models
 const { verifyToken, isAdmin } = require('../utils/middleware'); // Import middleware functions
@@ -7,39 +5,37 @@ const { verifyToken, isAdmin } = require('../utils/middleware'); // Import middl
 // Create Express router
 const router = express.Router();
 
-// Route for marking attendance
-
-// Mark Present
 router.post('/mark-present', verifyToken, isAdmin, async (req, res) => {
-    try {
+  try {
       // Extract attendance details from request body
-      const { studentId, classId } = req.body;
-  
+      const { studentId, facultyId } = req.body;
+
       // Find the attendance record for the given student and class
       let attendanceRecord = await AttendanceRecord.findOne({
-        where: { studentId, classId }
+          where: { facultyId, studentId},
       });
-  
+
       if (!attendanceRecord) {
-        // If no record found, return error
-        return res.status(404).json({ message: 'Attendance record not found' });
+          // If no record found, return error
+          return res.status(404).json({ message: 'Attendance record not found' });
       }
-  
+
       // Increment both classes attended and total classes
-      attendanceRecord.classesAttended += 1;
-      attendanceRecord.totalClasses += 1;
-  
+      attendanceRecord.classes_attended += 1;
+      attendanceRecord.total_classes += 1;
+
       // Save the updated record
       await attendanceRecord.save();
-  
+
       // Return success response with updated AttendanceRecord
       res.status(200).json({ message: 'Attendance marked present successfully', attendanceRecord });
-    } catch (error) {
+  } catch (error) {
       console.error('Error marking present:', error);
       res.status(500).json({ message: 'Internal server error' });
-    }
-  });
-  
+  }
+});
+
+
   // Mark Absent
 router.post('/mark-absent', verifyToken, isAdmin, async (req, res) => {
     try {
@@ -74,11 +70,11 @@ router.post('/mark-absent', verifyToken, isAdmin, async (req, res) => {
 router.post('/od-ml', verifyToken, isAdmin, async (req, res) => {
     try {
       // Extract attendance details from request body
-      const { studentId, classId } = req.body;
+      const { studentId, facultyId, od_ml} = req.body;
   
       // Find the attendance record for the given student and class
       let attendanceRecord = await AttendanceRecord.findOne({
-        where: { studentId, classId }
+        where: { studentId, facultyId }
       });
   
       if (!attendanceRecord) {
@@ -87,7 +83,7 @@ router.post('/od-ml', verifyToken, isAdmin, async (req, res) => {
       }
   
       // Increment only odml
-      attendanceRecord.odMl += 1;
+      attendanceRecord.od_ml += od_ml;
   
       // Save the updated record
       await attendanceRecord.save();
@@ -104,19 +100,11 @@ router.post('/od-ml', verifyToken, isAdmin, async (req, res) => {
 router.get('/attendance-details', verifyToken, async (req, res) => {
     try {
       // Retrieve faculty ID from token
-      const facultyId = req.user.facultyId;
+      const id = req.user.userId;
   
       // Fetch courses for the given faculty ID
       const courses = await Course.findAll({
-        where: { facultyId },
-        include: {
-          model: AttendanceRecord,
-          attributes: [
-            'classesAttended',
-            'totalClasses',
-            'odMl'
-          ]
-        }
+        where: { id },
       });
   
       // Calculate attendance percentage for each course
@@ -147,7 +135,7 @@ router.get('/attendance-details', verifyToken, async (req, res) => {
 router.get('/classes', verifyToken, async (req, res) => {
     try {
       // Retrieve faculty ID from token
-      const facultyId = req.user.facultyId;
+      const facultyId = req.user.userId;
   
       // Fetch all classes mapped to the given faculty ID
       const classes = await Class.findAll({
@@ -166,7 +154,7 @@ router.get('/classes', verifyToken, async (req, res) => {
 router.get('/courses', verifyToken, async (req, res) => {
     try {
       // Retrieve faculty ID from token
-      const facultyId = req.user.facultyId;
+      const facultyId = req.user.userId;
   
       // Fetch all courses mapped to the given faculty ID
       const courses = await Course.findAll({
@@ -184,11 +172,11 @@ router.get('/courses', verifyToken, async (req, res) => {
 router.get('/students', verifyToken, async (req, res) => {
     try {
       // Retrieve faculty ID from token
-      const facultyId = req.user.facultyId;
+      const facultyId = req.user.userId;
   
       // Fetch all students mapped to the given faculty ID
       const students = await Student.findAll({
-        where: { advisorId: facultyId } // Assuming advisorId is the foreign key linking students to faculty
+        where: { facultyId} // Assuming advisorId is the foreign key linking students to faculty
       });
   
       // Return success response with students
@@ -199,11 +187,32 @@ router.get('/students', verifyToken, async (req, res) => {
     }
   });
   
+  router.get('/attendance-details-full', verifyToken, async (req, res) => {
+    try {
+        // Retrieve the attendance record ID from the route parameters
+        const facultyId  = req.user.userId;
+
+        // Find the attendance record by ID with details
+        const attendanceRecord = await AttendanceRecord.findAll({
+          where: { facultyId }
+        });
+
+        if (!attendanceRecord) {
+            return res.status(404).json({ message: 'Attendance record not found' });
+        }
+
+        // Return success response with the attendance record details
+        res.status(200).json({ attendanceRecord });
+    } catch (error) {
+        console.error('Error fetching attendance record details:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
 
 router.get('/details', verifyToken, async (req, res) => {
     try {
       // Retrieve faculty ID from request parameters
-      const facultyId = req.params.facultyId;
+      const facultyId = req.user.userId;
   
       // Fetch details of the faculty by faculty ID
       const faculty = await Faculty.findByPk(facultyId);

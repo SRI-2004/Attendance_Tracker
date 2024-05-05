@@ -57,7 +57,7 @@ router.post('/signup_student', async (req, res) => {
         gender
       });
   
-  
+      const token = jwt.sign({ facultyId: newStudent.id, isAdmin: false }, process.env.JWT_SECRET, { expiresIn: '1h' });
       // Return token in response
       res.status(201).json({ token });
     } catch (error) {
@@ -71,7 +71,7 @@ router.post('/login', async (req, res) => {
     try {
       // Extract email and password from request body
       const { email, password } = req.body;
-  
+      console.log(email, password);
       // Check if faculty exists with the provided email
       let user = await Faculty.findOne({ where: { email } });
   

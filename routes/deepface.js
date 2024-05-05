@@ -2,7 +2,7 @@
 
 // Import necessary modules
 const express = require('express');
-const { ImageData, Student, Class } = require('../models/index'); // Import ImageData, Student, and Class models
+const { ImageData, Student, Class, AttendanceRecord } = require('../models/index'); // Import ImageData, Student, and Class models
 const { verifyToken, isAdmin } = require('../utils/middleware'); // Import middleware functions
 
 // Create Express router
@@ -35,7 +35,7 @@ router.post('/image-data', verifyToken, isAdmin, async (req, res) => {
   }
 });
 
-router.post('/mark-attendance', verifyToken, isAdmin, async (req, res) => {
+router.post('/mark-attendance', async (req, res) => {
     try {
       // Extract necessary data from request body
       const { studentId, classId, odMl } = req.body;
@@ -74,34 +74,33 @@ router.post('/mark-attendance', verifyToken, isAdmin, async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
   });
-
-router.post('/mark-present', verifyToken, isAdmin, async (req, res) => {
+  router.post('/mark-present', async (req, res) => {
     try {
-      // Extract attendance details from request body
-      const { studentId, classId } = req.body;
+        // Extract attendance details from request body
+        const { studentId,facultyId } = req.body;
   
-      // Find the attendance record for the given student and class
-      let attendanceRecord = await AttendanceRecord.findOne({
-        where: { studentId, classId }
-      });
+        // Find the attendance record for the given student and class
+        let attendanceRecord = await AttendanceRecord.findOne({
+            where: { studentId,facultyId},
+        });
   
-      if (!attendanceRecord) {
-        // If no record found, return error
-        return res.status(404).json({ message: 'Attendance record not found' });
-      }
+        if (!attendanceRecord) {
+            // If no record found, return error
+            return res.status(404).json({ message: 'Attendance record not found' });
+        }
   
-      // Increment both classes attended and total classes
-      attendanceRecord.classesAttended += 1;
-      attendanceRecord.totalClasses += 1;
+        // Increment both classes attended and total classes
+        attendanceRecord.classes_attended += 1;
+        attendanceRecord.total_classes += 1;
   
-      // Save the updated record
-      await attendanceRecord.save();
+        // Save the updated record
+        await attendanceRecord.save();
   
-      // Return success response with updated AttendanceRecord
-      res.status(200).json({ message: 'Attendance marked present successfully', attendanceRecord });
+        // Return success response with updated AttendanceRecord
+        res.status(200).json({ message: 'Attendance marked present successfully', attendanceRecord });
     } catch (error) {
-      console.error('Error marking present:', error);
-      res.status(500).json({ message: 'Internal server error' });
+        console.error('Error marking present:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
   });
   

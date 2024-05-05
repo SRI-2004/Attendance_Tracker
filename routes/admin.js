@@ -1,6 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const { Faculty, Course, Class } = require('../models/index'); // Import Faculty, Course, and Class models
+const { Faculty, Course, Class, Student, AttendanceRecord} = require('../models/index'); // Import Faculty, Course, and Class models
 const { verifyToken, } = require('../utils/middleware'); // Import verifyToken middleware
 const { isAdmin } = require('../utils/middleware');
 // Create Express router
@@ -11,12 +11,6 @@ router.post('/create_class', verifyToken, isAdmin, async (req, res) => {
   try {
     // Extract class details from request body
     const { courseId, date, startTime, endTime, location } = req.body;
-
-    // Check if course exists
-    const course = await Course.findByPk(courseId);
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
 
     // Create new class record
     const newClass = await Class.create({
@@ -57,14 +51,13 @@ router.post('/create_course', verifyToken, isAdmin, async (req, res) => {
 router.post('/enroll-student', verifyToken, isAdmin, async (req, res) => {
     try {
       // Extract attendance details from request body
-      const facultyId = req.user.facultyId;
-      const { courseId, studentId, classId, classesAttended, totalClasses, odMl } = req.body;
+      const { courseId, studentId, classId, classes_attended, total_classes, od_ml, facultyId } = req.body;
   
       // Check if facultyId exists
-      const faculty = await Faculty.findByPk(facultyId);
-      if (!faculty) {
-        return res.status(404).json({ message: 'Faculty not found' });
-      }
+      // const faculty = await Faculty.findByPk(facultyId);
+      // if (!faculty) {
+      //   return res.status(404).json({ message: 'Faculty not found' });
+      // }
   
       // Check if courseId exists
       const course = await Course.findByPk(courseId);
@@ -90,9 +83,9 @@ router.post('/enroll-student', verifyToken, isAdmin, async (req, res) => {
         courseId,
         studentId,
         classId,
-        classesAttended,
-        totalClasses,
-        odMl
+        classes_attended,
+        total_classes,
+        od_ml
       });
   
       // Return success response
@@ -129,6 +122,7 @@ router.get('/classes', verifyToken, isAdmin, async (req, res) => {
 router.get('/faculty', verifyToken, isAdmin, async (req, res) => {
     try {
       const faculty = await Faculty.findAll();
+      console.log(faculty);
       res.status(200).json({ faculty });
     } catch (error) {
       console.error('Error fetching faculty:', error);
